@@ -2,4 +2,3 @@ __pycache__/
 *.pyc
 .DS_Store
 artifacts/runs/
-models/chronos-2-local/model.safetensors

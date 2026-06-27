@@ -74,9 +74,6 @@ Key settings:
 ## Notes
 
 - The benchmark and leakage review is documented in `notes/benchmark_audit.md`.
-- The full local model weight file `models/chronos-2-local/model.safetensors`
-  is intentionally ignored by git in this public repository layout because it
-  is too large for a standard GitHub push. Keep the folder structure and place
-  the weight file there locally before running the benchmark.
-- For a public release, Git LFS or an external download link is preferable for
-  distributing the checkpoint.
+- The local Chronos-2 checkpoint is included under
+  `models/chronos-2-local/`. The `model.safetensors` file is tracked with Git
+  LFS.
