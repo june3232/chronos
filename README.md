@@ -1,4 +1,4 @@
-# Chronos-MCANN Benchmark
+# Chronos-RMoE Benchmark
 
 This repository contains the public benchmark code for our Chronos-based
 mixture-of-experts forecasting experiments across five electricity markets:
@@ -53,23 +53,17 @@ weights for that run.
 The public release uses a single fixed configuration that was finalized during
 development and kept unchanged for the benchmark run in this repository.
 
-Key settings:
+Protocol-level settings:
 
-- context length: 672
-- expert learning rate: 2e-4
-- router learning rate: 3e-5
-- batch size: 96
-- LoRA scope: `attn_plus_head_ffn`
-- LoRA rank: 16
-- LoRA dropout: 0.0
-- cluster prior weight: 0.03
-- sequence weight: 0.5
-- warm expert epochs: 5
-- warm expert weight: 0.3
-- post-warm expert weight: 0.05
-- router hidden dimension: 64
-- router heads: 2
-- router layers: 1
+- forecasting horizon: 24 hours
+- context length: 672 hours
+- chronological split: 1162 training days, 294 validation days, and 728 test days
+- model selection: validation-selected checkpoint for each market
+- test protocol: fixed model parameters, with no test-period retraining
+
+The complete run configuration is defined in `src/config.py`. Implementation
+details such as optimizer settings, LoRA adapter settings, router dimensions,
+and regularization weights are kept in the code rather than duplicated here.
 
 ## Notes
 
