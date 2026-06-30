@@ -1,10 +1,11 @@
+import os
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
-MODEL_DIR = PROJECT_ROOT / "models" / "chronos-2-local"
-OUTPUT_DIR = PROJECT_ROOT / "artifacts" / "runs"
+MODEL_DIR = Path(os.environ.get("CHRONOS_MODEL_DIR", PROJECT_ROOT / "models" / "chronos-2-local"))
+OUTPUT_DIR = Path(os.environ.get("CHRONOS_MCANN_OUTPUT_DIR", PROJECT_ROOT / "artifacts" / "runs"))
 
 
 MARKETS = {
@@ -63,7 +64,8 @@ MODEL_PARAMS = {
     "use_scheduler": True,
     "scheduler_factor": 0.7,
     "scheduler_patience": 1,
-    "cluster_prior_weight": 0.03,
+    "lambda_ent": 1.0e-3,
+    "lambda_expert": 1.0,
     "seq_weight": 0.5,
     "warm_expert_epochs": 5,
     "warm_expert_weight": 0.3,

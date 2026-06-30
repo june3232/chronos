@@ -605,20 +605,17 @@ def train_one_market(
             cluster_prior = batch["cluster_prior"].to(DEVICE)
             fusion_loss = nn.L1Loss()(pred, target)
             entropy = -(weights * torch.log(weights + 1e-8)).sum(dim=1).mean()
-            mean_weights = weights.mean(dim=1)
-            cluster_align = torch.sum(
-                cluster_prior * (torch.log(cluster_prior + 1e-8) - torch.log(mean_weights + 1e-8)),
-                dim=1,
-            ).mean()
             expert_abs_err = torch.abs(pred_stack - target.unsqueeze(-1))
             expert_mae_per_sample = expert_abs_err.mean(dim=1)
             weighted_expert_loss = torch.sum(cluster_prior * expert_mae_per_sample, dim=1).mean()
+            entropy_weight = params.get("lambda_ent", 1.0e-3)
             expert_weight = (
                 params["warm_expert_weight"]
                 if epoch < params["warm_expert_epochs"]
                 else params["post_warm_expert_weight"]
             )
-            loss = fusion_loss + 1e-3 * entropy + params["cluster_prior_weight"] * cluster_align + expert_weight * weighted_expert_loss
+            expert_weight = params.get("lambda_expert", 1.0) * expert_weight
+            loss = fusion_loss + entropy_weight * entropy + expert_weight * weighted_expert_loss
             if not torch.isfinite(loss):
                 raise RuntimeError(f"{market_name}: non-finite training loss")
             loss.backward()
@@ -669,28 +666,36 @@ def train_one_market(
         )
         checkpoint_path = str(checkpoint_file)
 
-    test_pack = evaluate_model(model, test_loader, prediction_length)
+    if params.get("evaluate_test", True):
+        test_pack = evaluate_model(model, test_loader, prediction_length)
+        test_metrics = test_pack["metrics"]
+        diagnostics = test_pack["diagnostics"]
+    else:
+        test_metrics = {"mae": math.nan, "mape": math.nan, "smape": math.nan, "rmse": math.nan}
+        diagnostics = {}
+
     result = {
         "market": market_name,
         "best_epoch": best_epoch,
         "val_mae": best_val,
-        "test_mae": test_pack["metrics"]["mae"],
-        "test_mape": test_pack["metrics"]["mape"],
-        "test_smape": test_pack["metrics"]["smape"],
-        "test_rmse": test_pack["metrics"]["rmse"],
-        "diagnostics": test_pack["diagnostics"],
+        "test_mae": test_metrics["mae"],
+        "test_mape": test_metrics["mape"],
+        "test_smape": test_metrics["smape"],
+        "test_rmse": test_metrics["rmse"],
+        "diagnostics": diagnostics,
         "checkpoint_path": checkpoint_path,
     }
 
-    log_fn(
-        f"[{market_name}] ROUTER avg_weights={[round(x, 4) for x in result['diagnostics']['avg_router_weights']]} "
-        f"avg_cluster_prior={[round(x, 4) for x in result['diagnostics']['avg_cluster_prior']]} "
-        f"argmax_share={[round(x, 4) for x in result['diagnostics']['overall_avg_router_argmax_share']]}"
-    )
-    log_fn(
-        f"[{market_name}] EXPERT_CORR "
-        + " ".join(f"{k}={v:.4f}" for k, v in result["diagnostics"]["pairwise_corr"].items())
-    )
+    if diagnostics:
+        log_fn(
+            f"[{market_name}] ROUTER avg_weights={[round(x, 4) for x in result['diagnostics']['avg_router_weights']]} "
+            f"avg_cluster_prior={[round(x, 4) for x in result['diagnostics']['avg_cluster_prior']]} "
+            f"argmax_share={[round(x, 4) for x in result['diagnostics']['overall_avg_router_argmax_share']]}"
+        )
+        log_fn(
+            f"[{market_name}] EXPERT_CORR "
+            + " ".join(f"{k}={v:.4f}" for k, v in result["diagnostics"]["pairwise_corr"].items())
+        )
 
     del model, optimizer
     cleanup()
