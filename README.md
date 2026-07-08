@@ -16,8 +16,6 @@ mixture-of-experts forecasting experiments across five electricity markets:
   - benchmark CSV files
 - `models/chronos-2-local/`
   - local Chronos-2 checkpoint used by the benchmark
-- `notes/benchmark_audit.md`
-  - benchmark protocol and leakage audit
 
 ## Benchmark Protocol
 
@@ -67,7 +65,4 @@ and regularization weights are kept in the code rather than duplicated here.
 
 ## Notes
 
-- The benchmark and leakage review is documented in `notes/benchmark_audit.md`.
-- The local Chronos-2 checkpoint is included under
-  `models/chronos-2-local/`. The `model.safetensors` file is tracked with Git
-  LFS.
+- The local Chronos-2 checkpoint is included under `models/chronos-2-local/`.
