@@ -1,7 +1,8 @@
 numpy
 pandas
-torch
-transformers
+torch>=2.2
+transformers>=4.41,<6
 peft
 safetensors
 scikit-learn
+chronos-forecasting>=2.0
